@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 import os
+from sys import stderr
 import time
 import math
 from datetime import datetime as dt
@@ -11,25 +12,28 @@ client = commands.Bot(command_prefix = ',')
 client.remove_command('help')
 dir_path = os.path.dirname(os.path.abspath(__file__))
 
-#if bot is running on heroku, get config key. if not, get local file with token.
-if dir_path.startswith('/app'):
+if 'TOKEN' in os.environ.keys():
     TOKEN = os.environ['TOKEN']
 else:
-    TOKEN = open(dir_path+'/token.txt', mode='r').read()
+    with open(dir_path+'/token.txt', 'r') as f:
+        TOKEN = f.read()
+        f.close()
 
 #On_ready command
 @client.event
 async def on_ready():
     await client.change_presence(activity=discord.Game('type ,help for help'))
-    await client.get_channel(705223622981320706).send(dt.utcnow())
+    print("hello")
+    # await client.get_channel(705223622981320706).send(dt.utcnow()) 
 
 #resets heroku config keys when disconnects
-@client.event
-async def on_disconnect():
-    headers = {'Accept': 'application/vnd.heroku+json; version=3', 'Content-Type': 'application/json'}
-    url = 'https://api.heroku.com/apps/salana/config-vars'
-    data = '{"rand_highscore_user": "'+os.environ['rand_highscore_user']+'", "rand_highscore_value": "'+os.environ['rand_highscore_value']+'"}'
-    requests.patch(url, data=data, auth=(os.environ['usern'], os.environ['apitoken']), headers=headers)
+#(vestigial kaje code)
+#@client.event
+#async def on_disconnect():
+#    headers = {'Accept': 'application/vnd.heroku+json; version=3', 'Content-Type': 'application/json'}
+#    url = 'https://api.heroku.com/apps/salana/config-vars'
+#    data = '{"rand_highscore_user": "'+os.environ['rand_highscore_user']+'", "rand_highscore_value": "'+os.environ['rand_highscore_value']+'"}'
+#    requests.patch(url, data=data, auth=(os.environ['usern'], os.environ['apitoken']), headers=headers)
 
 #Load, unload, reload cog commands
 @client.command()
@@ -80,6 +84,7 @@ for filename in os.listdir("./cogs"):
 #Error messages
 @client.event
 async def on_command_error(ctx, error):
+    # ah yes, I forgot that python lacked switch statements -- "unpythonic" apparently
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send('You\'re missing a required argument: '+str(error.param))
     elif isinstance(error, commands.TooManyArguments):
@@ -99,7 +104,7 @@ async def on_command_error(ctx, error):
 
 @client.event
 async def on_error(event, *args, **kwargs):
-    await client.get_user(474349369274007552).send(f'There was an error on {event}:\n{args}\n{kwargs}')
+    stderr.out(f'There was an error on {event}:\n{args}\n{kwargs}')
 
 #runs bot
 client.run(TOKEN)

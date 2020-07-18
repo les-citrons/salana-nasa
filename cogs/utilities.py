@@ -1,7 +1,8 @@
+
 import discord
 from discord.ext import commands
 import re
-from emoji import demojize
+#from emoji import demojize
 import time
 import os
 import datetime as dt
@@ -26,8 +27,6 @@ class utilities(commands.Cog):
     def __init__(self, client):
         self.client = client
         self.questions = []
-        self.headers = {'Accept': 'application/vnd.heroku+json; version=3', 'Content-Type': 'application/json'}
-        self.url = 'https://api.heroku.com/apps/salana/config-vars'
 
     @commands.command(hidden=True)
     @commands.is_owner()
@@ -49,19 +48,6 @@ class utilities(commands.Cog):
         await ctx.send('a! :dizzy_face::skull_crossbones:')
         quit()
 
-    @commands.command(hidden=True)
-    @commands.has_permissions(manage_messages=True)
-    async def reset(self, ctx):
-        """Resets the welcome channel. You must have the manage messages permissions to use this command."""
-        if ctx.channel.id == wali_welcomechannel_id:
-            await ctx.channel.purge()
-            await ctx.send(f'Welcome! This is wali wi pa mu, a discord server for the constructed language pa mu. Read the rules in {self.client.get_channel(654413439141150751).mention} and it\'ll tell you what you need to do to gain access to the server.\n\nIf you\'re having trouble, ping `@ju pala` and we\'ll be with you to help as soon as we can.')
-        elif ctx.channel.id == mapona_welcomechannel_id:
-            await ctx.channel.purge()
-            await ctx.send(f':flag_gb: Welcome! This is ma pona pi toki pona, a discord server for the constructed language toki pona. Read the rules in {self.client.get_channel(589550572051628049).mention} and it\'ll tell you what you need to do to gain access to the server.\n\nIf you\'re still having trouble with gaining entry after reading the rules, that\'s totally fine! Just ping `@jan lawa` and `@jan pali` and we\'ll be with you to help as soon as we can.\n\n<:flag_tp:448287759266742272> kama pona a! ni li ma pona pi toki pona. kulupu ni la jan li toki pona li toki e ijo pi toki pona. o lukin e tomo {self.client.get_channel(589550572051628049).mention}. kama lon kulupu ale la o toki e nimi "toki" lon tomo ni.\n\nsina ken ala kama lon kulupu ale la o toki e `@jan lawa` e `@jan pali`.')
-        else:
-            await ctx.send('Not in the right channel.')
-
     #Custom Help command
     @commands.command(aliases=['h'])
     async def help(self, ctx, cmd=None):
@@ -82,13 +68,6 @@ class utilities(commands.Cog):
         
             #message to explain features
             extra_msg = discord.Embed(title='Features', color=discord.Color.blue())
-            if ctx.guild.id == waliwipamu_id:
-                muwipamumi = self.client.get_channel(654422747090518036).mention
-                hardcore_text = f'If you have the hardcore role, any message you send that is not in pa mu will be deleted. Exceptions are when you preface your message with an asterisk or put the non-pa mu text behind spoiler bars. In addition, any message in {muwipamumi} will be scanned and possibly deleted in the same way.'
-            elif ctx.guild.id == mapona_id:
-                mentions = f'{self.client.get_channel(301377942062366741).mention}, {self.client.get_channel(375591429608570881).mention}, {self.client.get_channel(340307145373253642).mention}, or {self.client.get_channel(545467374254555137).mention}'
-                hardcore_text = f'If you have the hardcore role, any message you send in {mentions} that is not in toki pona will be deleted. Exceptions are when you preface your message with an asterisk. Checks for toki pona the same way that ,ctp does.'
-            extra_msg.add_field(name='__HARDCORE__', value=hardcore_text, inline = False)
             extra_msg.add_field(name='__REPORTING MESSAGES__', value='Any message that two or more people react to with :triangular_flag_on_post: will have a copy sent to a certain channel. This allows people to flag messages they think are breaking the rules so that mods can easily notice and address the issue.', inline=False)
             extra_msg.add_field(name='__QUESTION LOGGING__', value='ilo Salana has a way to record and keep track of questions people ask. To log your question, simply type `,q <question>` and it\'ll add it to its log. Type `,q a` to mark your last question as answered.', inline = False)
 
@@ -146,7 +125,7 @@ class utilities(commands.Cog):
     async def github(self, ctx):
         '''Links to the github page for this bot.'''
         embed = discord.Embed(color=discord.Color.gold())
-        embed.add_field(name='Link to my Github', value=f'[Click Here](https://github.com/janKaje/salana)')
+        embed.add_field(name='Link to my Github', value=f'[Click Here](https://github.com/les-citrons/salana-nasa)')
         await ctx.send(embed=embed)
 
     async def add_question(self, question, ctx):
