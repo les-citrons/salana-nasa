@@ -7,6 +7,8 @@ import math
 from datetime import datetime as dt
 import requests
 
+import save
+
 #Initialize
 client = commands.Bot(command_prefix = ',')
 client.remove_command('help')
@@ -18,6 +20,8 @@ else:
     with open(dir_path+'/token.txt', 'r') as f:
         TOKEN = f.read()
         f.close()
+
+save.load_state()
 
 #On_ready command
 @client.event

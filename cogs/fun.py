@@ -8,6 +8,8 @@ from functools import reduce
 from functools import lru_cache
 import re
 import os
+
+import save
     
 def setup(client):
     client.add_cog(fun(client))
@@ -119,28 +121,38 @@ class fun(commands.Cog):
         await ctx.send(f"I'd give {item} a {rate_value}/10")
 
     @commands.command(aliases=['rand'])
-    @commands.cooldown(1, 30, commands.BucketType.user)
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def random(self, ctx):
         '''Gives a random number. Keeps track of high score.'''
         value = ''
-        choices = [True]
-        while True:
-            if random.choice(choices):
-                value += str(random.randint(0, 9))
-                choices.append(False)
-            else:
-                value = int(value)
-                break
-        highscore_user = os.environ['rand_highscore_user']
-        highscore_value = int(os.environ['rand_highscore_value'])
+        choices = [True, True]
+        while random.choice(choices):
+            value += str(random.randint(0, 9))
+            choices.append(False)
+
+        value = int(value)
+
+        if 'rand_highscore_user' in save.state.keys():
+            highscore_user = save.state['rand_highscore_user']
+            highscore_value = save.state['rand_highscore_value']
+        else:
+            highscore_user = str(ctx.author)
+            highscore_value = 0
+
         if value > highscore_value:
-            embed = discord.Embed(color=discord.Color.blurple(), title='Congratulations!! :partying_face:', description='You beat the high score!')
+            embed = discord.Embed(color=discord.Color.blurple(), 
+                    title='Congratulations!! :partying_face:', 
+                    description='You beat the high score!')
+
             embed.add_field(name='Old high score:', value=f'{highscore_user} got {highscore_value}')
             embed.add_field(name='New high score:', value=f'{str(ctx.author)} got {value}')
-            os.environ['rand_highscore_user'] = str(ctx.author)
-            os.environ['rand_highscore_value'] = str(value)
+            save.save_state('rand_highscore_user', str(ctx.author))
+            save.save_state('rand_highscore_value', value)
         else:
-            embed = discord.Embed(color=discord.Color.lighter_grey(), title='Value:', description=str(value))
+            embed = discord.Embed(color=discord.Color.lighter_grey(), 
+                    title='Value:', description=str(value))
+
             embed.set_footer(text='You did not beat the high score.')
-            embed.add_field(name='Current high score:', value=f'{highscore_user} got {highscore_value}')
+            embed.add_field(name='Current high score:', 
+                    value=f'{highscore_user} got {highscore_value}')
         await ctx.send(embed=embed)
