@@ -23,6 +23,8 @@ class econ_cog(commands.Cog):
         if what <= 0:
             await ctx.send("Invalid amount.")
             return
+
+        what = round(what, 2)
         
         from_acc = econ.get_account(ctx.author.id)
         to_acc = econ.get_account(who.id)
@@ -44,8 +46,6 @@ class econ_cog(commands.Cog):
             await ctx.send("You cannot give a number to yourself.")
             return
 
-        what = round(what, 2)
-        
         from_acc = econ.get_account(ctx.author.id)
         to_acc = econ.get_account(who.id)
 
@@ -56,8 +56,8 @@ class econ_cog(commands.Cog):
             await ctx.send(f"Number '{what}' is not in collection '{collection}'.")
             return
 
-        from_acc.remove_number(what, collection)
-        to_acc.add_number(what, "default")
+        from_acc.remove_number(collection, what)
+        to_acc.add_number("default", what)
         
         econ.save_bank()
 
