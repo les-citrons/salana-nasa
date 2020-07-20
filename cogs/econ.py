@@ -13,6 +13,8 @@ def setup(client):
 
 @lru_cache(maxsize=None)
 class econ_cog(commands.Cog):
+    """ECONOMY"""
+
     def __init__(self, client):
         self.client = client
 
