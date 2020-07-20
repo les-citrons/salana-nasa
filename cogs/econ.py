@@ -4,6 +4,7 @@ import functools
 from functools import lru_cache
 
 import econ
+import save
 
 CURRENCY = "mani"
 
@@ -30,7 +31,7 @@ class econ_cog(commands.Cog):
         to_acc = econ.get_account(who.id)
 
         if from_acc.balance < what:
-            await ctx.send("Insufficient funs.")
+            await ctx.send("Insufficient funds.")
             return
         
         from_acc.transact(-what)
@@ -68,7 +69,7 @@ class econ_cog(commands.Cog):
     async def balance(self, ctx):
         balance = econ.get_account(ctx.author.id).balance
         embed = discord.Embed()
-        embed.add_field(name='Balance:', value=f"{balance} {CURRENCY}")
+        embed.add_field(name='Balance', value=f"{balance} {CURRENCY}")
 
         await ctx.send(embed=embed)
 
@@ -174,10 +175,11 @@ class econ_cog(commands.Cog):
     @commands.command()
     async def bet(self, ctx, amount: float):
         acc = econ.get_account(ctx.author.id)
+
         if amount <= 0:
             await ctx.send("Invalid amount.")
             return
-        if acc.bet != 0:
+        if acc.bet() != 0:
             await ctx.send(f"You have already bet {amount} {CURRENCY}. \
                     Use ,unbet to rescind your bet.")
             return
@@ -187,26 +189,67 @@ class econ_cog(commands.Cog):
                 await ctx.send("You cannot afford this bet.")
                 return
             else:
-                await ctx.send("**Notice**: You have bet more than your current balance. \
-                        If you lose the bet, you will go into debt. You may use ',unbet' \
-                        to rescind your bet.")
+                await ctx.send("**Notice**: You have bet more than your current balance. " +
+                        "If you lose the bet, you will go into debt. You may use ',unbet' " +
+                        "to rescind your bet.")
 
         deduct = round(amount / 2, 2)
         acc.transact(-deduct)
-        acc.bet = deduct
+        acc.bet_value = amount
 
-        await ctx.send(f"You bet {amount} {CURRENCY} that you will achieve the high score \
-                on your next invocation of ,rand. You have paid {deduct} {CURRENCY} in advance.")
+        await ctx.send(f"You bet {amount} {CURRENCY} that you will achieve the high score " +
+                f"on your next invocation of ,rand. You have paid {deduct} {CURRENCY} in advance.")
 
     @commands.command()
     async def unbet(self, ctx):
-        acc = econ.get_account(ctx.author)
-        if acc.bet == 0:
+        acc = econ.get_account(ctx.author.id)
+        if acc.bet() == 0:
             await ctx.send("No current bet.")
             return
-        refund = round(amount / 2, 2)
+        refund = round(acc.bet() / 2, 2)
         acc.transact(refund)
-        acc.bet = 0
+        acc.bet_value = 0
 
         await ctx.send(f"You rescind your bet. You are refunded {refund} {CURRENCY}.")
 
+        econ.save_bank()
+
+    @commands.command()
+    async def seeds(self, ctx):
+        acc = econ.get_account(ctx.author.id)
+        seeds = acc.seeds()
+        embed = discord.Embed()
+        embed.add_field(name="Seeds", value=seeds)
+
+        await ctx.send(embed=embed)
+
+    @commands.command(aliases=['price'])
+    async def seedprice(self, ctx):
+        if not 'seed_price' in save.state.keys():
+            save.save_state('seed_price', 50)
+        embed = discord.Embed()
+        embed.add_field(name="Current seed price", 
+            value=f"{save.state['seed_price']} {CURRENCY}")
+        await ctx.send(embed=embed)
+
+    @commands.command(aliases=['buy'])
+    async def buyseeds(self, ctx, amount=1):
+        if not 'seed_price' in save.state.keys():
+            save.save_state('seed_price', 50)
+        if amount < 1:
+            await ctx.send("Invalid amount.")
+            return
+        seed_price = save.state['seed_price']
+        cost = amount * seed_price
+
+        acc = econ.get_account(ctx.author.id)
+        if cost > acc.balance:
+            await ctx.send(f"Insufficient funds to purchase seeds for {cost} {CURRENCY}.")
+            return
+        
+        acc.transact(-cost)
+        acc.seed_count += amount
+
+        await ctx.send(f"Purchased seeds for {cost} {CURRENCY}.")
+
+        econ.save_bank()

@@ -127,11 +127,12 @@ class fun(commands.Cog):
         '''Gives a random number. Keeps track of high score.'''
         acc = econ.get_account(ctx.author.id)
         if len(seed) > 0:
-            if acc.seeds > 0:
-                acc.seeds -= 1
+            if acc.seeds() > 0:
+                acc.seed_count -= 1
                 random.seed(seed)
+                await ctx.send("You have seeded the random number generator.")
             else:
-                await ctx.send("You do not have any seeds with which to seed rand.")
+                await ctx.send("You do not have any seeds with which to seed random generator.")
                 return
 
         value = ''
@@ -162,9 +163,19 @@ class fun(commands.Cog):
             save.save_state('rand_highscore_user', str(ctx.author))
             save.save_state('rand_highscore_value', value)
 
-            if acc.bet != 0:
-                acc.transact(acc.bet * 1.5)
-                acc.bet = 0
+            if acc.bet() != 0:
+                acc.transact(acc.bet() * 1.5)
+                if not 'seed_price' in save.state.keys():
+                    seed_price = 50
+                else:
+                    seed_price = save.state['seed_price']
+                seed_price += acc.bet()
+                seed_price /= 2
+                seed_price = round(seed_price, 2)
+                print(seed_price)
+                save.save_state('seed_price', seed_price)
+
+                acc.bet_value = 0
                 await ctx.send("You won the bet!")
         else:
             embed = discord.Embed(color=discord.Color.lighter_grey(), 
@@ -174,9 +185,9 @@ class fun(commands.Cog):
             embed.add_field(name='Current high score:', 
                     value=f'{highscore_user} got {highscore_value}')
 
-            if acc.bet != 0:
-                acc.transact(-(acc.bet * 2))
-                acc.bet = 0
+            if acc.bet() != 0:
+                acc.transact(-(acc.bet() * 2))
+                acc.bet_value = 0
                 await ctx.send("You lost the bet.")
 
         econ.save_bank()
