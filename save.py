@@ -1,16 +1,13 @@
 
 import pickle
 
-def load_state():
-    global state 
+if not 'state' in vars():
     try:
         with open("save.p", 'rb') as f:
             state = pickle.load(f)
             f.close()
     except FileNotFoundError:
         state = {}
-    except Exception as e:
-        raise(e)
 
 def save_state(param, value):
     global state
