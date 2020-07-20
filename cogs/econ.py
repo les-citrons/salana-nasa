@@ -47,9 +47,9 @@ class econ_cog(commands.Cog):
         what = round(what, 2)
         
         from_acc = econ.get_account(ctx.author.id)
-        to_acc = econ.get_account(who)
+        to_acc = econ.get_account(who.id)
 
-        if not collection in from_acc.keys():
+        if not collection in from_acc.number_collection.keys():
             await ctx.send(f"Collection '{collection}' does not exist.")
             return
         if not what in from_acc.number_collection:
@@ -95,6 +95,8 @@ class econ_cog(commands.Cog):
         acc.create_collection(name)
         await ctx.send("Collection created.")
 
+        econ.save_bank()
+
     @commands.command(aliases=['lsc'])
     async def collections(self, ctx):
         acc = econ.get_account(ctx.author.id)
@@ -114,6 +116,8 @@ class econ_cog(commands.Cog):
         acc.remove_collection(name)
         await ctx.send(f"Collection '{name}' has been removed. \
                 Its numbers are now in your default collection.")
+        
+        econ.save_bank()
 
     @commands.command(aliases=['mv', 'move'])
     async def movenumber(self, ctx, number: int, destination, source="default"):
@@ -128,3 +132,5 @@ class econ_cog(commands.Cog):
         acc.remove_number(source, number)
         acc.add_number(destination, number)
         await ctx.send("Number moved.")
+
+        econ.save_bank()
