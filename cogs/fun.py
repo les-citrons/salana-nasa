@@ -171,6 +171,7 @@ class fun(commands.Cog):
                     seed_price = save.state['seed_price']
                 seed_price += acc.bet()
                 seed_price /= 2
+                seed_price = max(10, seed_price - 25)
                 seed_price = round(seed_price, 2)
                 print(seed_price)
                 save.save_state('seed_price', seed_price)
@@ -190,5 +191,11 @@ class fun(commands.Cog):
                 acc.bet_value = 0
                 await ctx.send("You lost the bet.")
 
-        econ.save_bank()
         await ctx.send(embed=embed)
+
+        if value % 16 == 0 and value != 0:
+            acc.seed_count += 1
+            await ctx.send("You generated a multiple of 16! You earned one seed.")
+
+        econ.save_bank()
+

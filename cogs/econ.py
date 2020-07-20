@@ -104,7 +104,7 @@ class econ_cog(commands.Cog):
         embed = discord.Embed(title=f"Your collections:")
         for collection in acc.number_collection.keys():
             n_count = len(acc.number_collection[collection])
-            embed.add_field(name=collection,value=f"{n_count} numbers")
+            embed.add_field(name=collection,value=f"{n_count} numbers", inline = False)
 
         await ctx.send(embed=embed)
 
