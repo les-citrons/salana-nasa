@@ -21,8 +21,6 @@ else:
         TOKEN = f.read()
         f.close()
 
-save.load_state()
-
 #On_ready command
 @client.event
 async def on_ready():

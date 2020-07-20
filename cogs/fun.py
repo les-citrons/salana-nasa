@@ -10,6 +10,7 @@ import re
 import os
 
 import save
+import econ
     
 def setup(client):
     client.add_cog(fun(client))
@@ -131,6 +132,9 @@ class fun(commands.Cog):
             choices.append(False)
 
         value = int(value)
+
+        econ.get_account(ctx.author.id).add_number("default", value)
+        econ.save_bank()
 
         if 'rand_highscore_user' in save.state.keys():
             highscore_user = save.state['rand_highscore_user']
