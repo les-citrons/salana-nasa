@@ -64,7 +64,7 @@ class econ_cog(commands.Cog):
         await ctx.send(
                 f"You have transfered '{what}' from your collection '{collection}' to {who.name}.")
 
-    @commands.command()
+    @commands.command(aliases=['bal'])
     async def balance(self, ctx):
         balance = econ.get_account(ctx.author.id).balance
         embed = discord.Embed()
@@ -110,11 +110,11 @@ class econ_cog(commands.Cog):
     @commands.command(aliases=['rmc','delc'])
     async def delcollection(self, ctx, collection):
         acc = econ.get_account(ctx.author.id)
-        if not name in acc.number_collection.keys():
+        if not collection in acc.number_collection.keys():
             await ctx.send("That collection does not exist.")
             return
-        acc.remove_collection(name)
-        await ctx.send(f"Collection '{name}' has been removed. \
+        acc.remove_collection(collection)
+        await ctx.send(f"Collection '{collection}' has been removed. \
                 Its numbers are now in your default collection.")
         
         econ.save_bank()
@@ -122,8 +122,8 @@ class econ_cog(commands.Cog):
     @commands.command(aliases=['mv', 'move'])
     async def movenumber(self, ctx, number: int, destination, source="default"):
         acc = econ.get_account(ctx.author.id)
-        if not source in acc.number_collection.keys() and \
-                destination in acc.number_collection.keys():
+        if not (source in acc.number_collection.keys() and \
+                destination in acc.number_collection.keys()):
             await ctx.send("Invalid source or destination.")
             return
         if not number in acc.number_collection[source]:
@@ -134,3 +134,79 @@ class econ_cog(commands.Cog):
         await ctx.send("Number moved.")
 
         econ.save_bank()
+
+    @commands.command()
+    async def sell(self, ctx, number: int, collection="default"):
+        acc = econ.get_account(ctx.author.id)
+        if not collection in acc.number_collection.keys():
+            await ctx.send("That collection does not exist.")
+            return
+        if not number in acc.number_collection[collection]:
+            await ctx.send("That number is not in your collection.")
+            return
+        if len(str(number)) < 5:
+            await ctx.send("You can only sell numbers with >= 5 digits.")
+            return
+
+        acc.remove_number(collection, number)
+        value = min(round(10 + (number / 10 ** 5), 2), 50)
+        acc.transact(value)
+        await ctx.send(f"You sold {number} for {value} {CURRENCY}.")
+
+        econ.save_bank()
+
+    @commands.command(aliases=['r'])
+    async def recycle(self, ctx, number: int, collection="default"):
+        acc = econ.get_account(ctx.author.id)
+        if not collection in acc.number_collection.keys():
+            await ctx.send("That collection does not exist.")
+            return
+        if not number in acc.number_collection[collection]:
+            await ctx.send("That number is not in your collection.")
+            return
+
+        acc.remove_number(collection, number)
+        acc.transact(0.05)
+        await ctx.send(f"You recycled {number}. You earned 0.05 {CURRENCY} for recycling.")
+
+        econ.save_bank()
+
+    @commands.command()
+    async def bet(self, ctx, amount: float):
+        acc = econ.get_account(ctx.author.id)
+        if amount <= 0:
+            await ctx.send("Invalid amount.")
+            return
+        if acc.bet != 0:
+            await ctx.send(f"You have already bet {amount} {CURRENCY}. \
+                    Use ,unbet to rescind your bet.")
+            return
+        amount = round(amount, 2)
+        if amount > acc.balance:
+            if amount / 2 > acc.balance:
+                await ctx.send("You cannot afford this bet.")
+                return
+            else:
+                await ctx.send("**Notice**: You have bet more than your current balance. \
+                        If you lose the bet, you will go into debt. You may use ',unbet' \
+                        to rescind your bet.")
+
+        deduct = round(amount / 2, 2)
+        acc.transact(-deduct)
+        acc.bet = deduct
+
+        await ctx.send(f"You bet {amount} {CURRENCY} that you will achieve the high score \
+                on your next invocation of ,rand. You have paid {deduct} {CURRENCY} in advance.")
+
+    @commands.command()
+    async def unbet(self, ctx):
+        acc = econ.get_account(ctx.author)
+        if acc.bet == 0:
+            await ctx.send("No current bet.")
+            return
+        refund = round(amount / 2, 2)
+        acc.transact(refund)
+        acc.bet = 0
+
+        await ctx.send(f"You rescind your bet. You are refunded {refund} {CURRENCY}.")
+

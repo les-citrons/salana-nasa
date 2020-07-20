@@ -123,8 +123,17 @@ class fun(commands.Cog):
 
     @commands.command(aliases=['rand'])
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def random(self, ctx):
+    async def random(self, ctx, seed=""):
         '''Gives a random number. Keeps track of high score.'''
+        acc = econ.get_account(ctx.author.id)
+        if len(seed) > 0:
+            if acc.seeds > 0:
+                acc.seeds -= 1
+                random.seed(seed)
+            else:
+                await ctx.send("You do not have any seeds with which to seed rand.")
+                return
+
         value = ''
         choices = [True, True]
         while random.choice(choices):
@@ -133,15 +142,15 @@ class fun(commands.Cog):
 
         value = int(value)
 
-        econ.get_account(ctx.author.id).add_number("default", value)
-        econ.save_bank()
-
         if 'rand_highscore_user' in save.state.keys():
             highscore_user = save.state['rand_highscore_user']
             highscore_value = save.state['rand_highscore_value']
         else:
             highscore_user = str(ctx.author)
             highscore_value = 0
+
+        acc.add_number("default", value)
+            
 
         if value > highscore_value:
             embed = discord.Embed(color=discord.Color.blurple(), 
@@ -152,6 +161,11 @@ class fun(commands.Cog):
             embed.add_field(name='New high score:', value=f'{str(ctx.author)} got {value}')
             save.save_state('rand_highscore_user', str(ctx.author))
             save.save_state('rand_highscore_value', value)
+
+            if acc.bet != 0:
+                acc.transact(acc.bet * 1.5)
+                acc.bet = 0
+                await ctx.send("You won the bet!")
         else:
             embed = discord.Embed(color=discord.Color.lighter_grey(), 
                     title='Value:', description=str(value))
@@ -159,4 +173,11 @@ class fun(commands.Cog):
             embed.set_footer(text='You did not beat the high score.')
             embed.add_field(name='Current high score:', 
                     value=f'{highscore_user} got {highscore_value}')
+
+            if acc.bet != 0:
+                acc.transact(-(acc.bet * 2))
+                acc.bet = 0
+                await ctx.send("You lost the bet.")
+
+        econ.save_bank()
         await ctx.send(embed=embed)
