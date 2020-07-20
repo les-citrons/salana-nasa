@@ -52,7 +52,7 @@ class econ_cog(commands.Cog):
         if not collection in from_acc.number_collection.keys():
             await ctx.send(f"Collection '{collection}' does not exist.")
             return
-        if not what in from_acc.number_collection:
+        if not what in from_acc.number_collection[collection]:
             await ctx.send(f"Number '{what}' is not in collection '{collection}'.")
             return
 
