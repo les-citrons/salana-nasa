@@ -194,8 +194,12 @@ class fun(commands.Cog):
         await ctx.send(embed=embed)
 
         if value % 16 == 0 and value != 0:
-            acc.seed_count += 1
-            await ctx.send("You generated a multiple of 16! You earned one seed.")
+            if len(seed) == 0:
+                acc.seed_count += 1
+                await ctx.send("You generated a multiple of 16! You earned one seed.")
+            else:
+                await ctx.send("You generated a multiple of 16. " +
+                        "However, since you seeded this outcome, you did not earn a seed.")
 
         econ.save_bank()
 
